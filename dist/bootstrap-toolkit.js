@@ -5,7 +5,41 @@
  * Version:   2.6.3 (2016-06-21)
  * Origin:    https://github.com/maciej-gurban/responsive-bootstrap-toolkit
  */
-var ResponsiveBootstrapToolkit = (function($){
+
+ // @ts-check
+
+var ResponsiveBootstrapToolkit = (function(){
+
+    var placeholder;
+
+    var jQueryShim = {
+        /**
+         * Create a div with the specified className
+         */
+        createDiv: function(className) {
+            var div = document.createElement("div");
+            div.className = className;
+            return div;
+        },
+
+        /**
+         * Returns wether an element is visible (like jquery :visible)
+         */
+        isVisible: function(elem) {
+            return !!( elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length );
+        },
+
+        /**
+         * Executes a callback when the document is ready, like jQuery(document).ready
+         */
+        onDocumentReady: function(fn) {
+            if (document['attachEvent'] ? document.readyState === "complete" : document.readyState !== "loading") {
+                fn();
+            } else {
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+        }
+    };
 
     // Internal methods
     var internal = {
@@ -16,17 +50,10 @@ var ResponsiveBootstrapToolkit = (function($){
         detectionDivs: {
             // Bootstrap 3
             bootstrap: {
-                'xs': $('<div class="device-xs visible-xs visible-xs-block"></div>'),
-                'sm': $('<div class="device-sm visible-sm visible-sm-block"></div>'),
-                'md': $('<div class="device-md visible-md visible-md-block"></div>'),
-                'lg': $('<div class="device-lg visible-lg visible-lg-block"></div>')
-            },
-            // Foundation 5
-            foundation: {
-                'small':  $('<div class="device-xs show-for-small-only"></div>'),
-                'medium': $('<div class="device-sm show-for-medium-only"></div>'),
-                'large':  $('<div class="device-md show-for-large-only"></div>'),
-                'xlarge': $('<div class="device-lg show-for-xlarge-only"></div>')
+                'xs': jQueryShim.createDiv("device-xs visible-xs visible-xs-block"),
+                'sm': jQueryShim.createDiv("device-sm visible-sm visible-sm-block"),
+                'md': jQueryShim.createDiv("device-md visible-md visible-md-block"),
+                'lg': jQueryShim.createDiv("device-lg visible-lg visible-lg-block")
             }
         },
 
@@ -34,9 +61,9 @@ var ResponsiveBootstrapToolkit = (function($){
          * Append visibility divs after DOM laoded
          */
         applyDetectionDivs: function() {
-            $(document).ready(function(){
-                $.each(self.breakpoints, function(alias){
-                    self.breakpoints[alias].appendTo('.responsive-bootstrap-toolkit');
+            jQueryShim.onDocumentReady(function(){
+                Object.keys(self.breakpoints).forEach(function(alias){
+                    placeholder.appendChild(self.breakpoints[alias]);
                 });
             });
         },
@@ -83,15 +110,9 @@ var ResponsiveBootstrapToolkit = (function($){
          * Returns true if currently active breakpoint matches the expression
          */
         isAnyActive: function( breakpoints ) {
-            var found = false;
-            $.each(breakpoints, function( index, alias ) {
-                // Once first breakpoint matches, return true and break out of the loop
-                if( self.breakpoints[ alias ].is(':visible') ) {
-                    found = true;
-                    return false;
-                }
+            return breakpoints.some(function( alias ) {
+                return jQueryShim.isVisible(self.breakpoints[ alias ]);
             });
-            return found;
         },
 
         /**
@@ -174,7 +195,7 @@ var ResponsiveBootstrapToolkit = (function($){
             if( internal.isAnExpression( str ) ) {
                 return internal.isMatchingExpression( str );
             }
-            return self.breakpoints[ str ] && self.breakpoints[ str ].is(':visible');
+            return self.breakpoints[ str ] && jQueryShim.isVisible(self.breakpoints[ str ]);
         },
 
         /**
@@ -183,7 +204,7 @@ var ResponsiveBootstrapToolkit = (function($){
         use: function( frameworkName, breakpoints ) {
             self.framework = frameworkName.toLowerCase();
 
-            if( self.framework === 'bootstrap' || self.framework === 'foundation') {
+            if( self.framework === 'bootstrap' ) {
                 self.breakpoints = internal.detectionDivs[ self.framework ];
             } else {
                 self.breakpoints = breakpoints;
@@ -197,7 +218,7 @@ var ResponsiveBootstrapToolkit = (function($){
          */
         current: function(){
             var name = 'unrecognized';
-            $.each(self.breakpoints, function(alias){
+            Object.keys(self.breakpoints).forEach(function(alias){
                 if (self.is(alias)) {
                     name = alias;
                 }
@@ -221,8 +242,9 @@ var ResponsiveBootstrapToolkit = (function($){
     };
 
     // Create a placeholder
-    $(document).ready(function(){
-        $('<div class="responsive-bootstrap-toolkit"></div>').appendTo('body');
+    jQueryShim.onDocumentReady(function(){
+        placeholder = jQueryShim.createDiv("responsive-bootstrap-toolkit");
+        document.body.appendChild(placeholder);
     });
 
     if( self.framework === null ) {
@@ -231,7 +253,7 @@ var ResponsiveBootstrapToolkit = (function($){
 
     return self;
 
-})(jQuery);
+})();
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ResponsiveBootstrapToolkit;

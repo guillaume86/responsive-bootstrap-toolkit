@@ -3,9 +3,9 @@
 (function($, document, window, viewport){
 
     var visibilityDivs = {
-        'alias-1': $('<div class="device-alias-1 visible-custom-1"></div>'),
-        'alias-2': $('<div class="device-alias-2 visible-custom-2"></div>'),
-        'alias-3': $('<div class="device-alias-3 visible-custom-3"></div>')
+        'alias-1': $('<div class="device-alias-1 visible-custom-1"></div>')[0],
+        'alias-2': $('<div class="device-alias-2 visible-custom-2"></div>')[0],
+        'alias-3': $('<div class="device-alias-3 visible-custom-3"></div>')[0]
     };
 
     viewport.use('Custom', visibilityDivs);
